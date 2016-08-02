@@ -48,7 +48,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	__webpack_require__(/*! whatwg-fetch */1);
-	module.exports = __webpack_require__(/*! /Users/osman/src/reactstarter/src/main.js */2);
+	module.exports = __webpack_require__(/*! /Users/osman/src/react-catflip/src/main.js */2);
 
 
 /***/ },
