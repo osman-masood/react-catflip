@@ -15,8 +15,9 @@ var firebaseApp = firebase.initializeApp({
 });
 var database = firebase.database();
 
-var provider = new firebase.auth.FacebookAuthProvider();
-provider.addScope('public_profile, email, user_birthday');
+var facebookAuthProvider = new firebase.auth.FacebookAuthProvider();
+facebookAuthProvider.addScope('public_profile, email, user_birthday');
+var emailAuthProvider = firebase.auth.EmailAuthProvider();
 
 // Need to get the UI for this fixed (pressing Down button doesn't make it go down, doesn't remove suggestions on blur)
 // var GeoSuggest = require('react-geosuggest').default;
@@ -26,7 +27,7 @@ provider.addScope('public_profile, email, user_birthday');
 class LandingPage extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {isSignedIn: false, currentCourses: []};
+        this.state = {isSignedIn: [false], currentCourses: []};
         this.handleFBSignIn = this.handleFBSignIn.bind(this);
     }
 
@@ -35,7 +36,7 @@ class LandingPage extends React.Component {
         firebase.auth().onAuthStateChanged(function(user) {
             if (user) {
                 console.log("User is now logged in", user);
-                thisComponent.setState({isSignedIn: true});
+                thisComponent.setState({isSignedIn: [true]});
             } else {
                 // No user is signed in.
             }
@@ -45,7 +46,7 @@ class LandingPage extends React.Component {
     render() {
         console.log("LandingPage render() with state: ", this.state);
         var body;
-        if (this.state.isSignedIn) {
+        if (this.state.isSignedIn[0]) {
             console.log("Going to show FormPage");
             body = <FormPage />;
             // Location autocomplete
@@ -121,30 +122,31 @@ class LandingPage extends React.Component {
     handleFBSignIn() {
         console.log("Clicked Signed in with FB");
         var thisComponent = this;
-        firebase.auth().signInWithPopup(provider).then(function(result) {
+        firebase.auth().signInWithPopup(facebookAuthProvider).then(function(result) {
             console.log("FB signin successful, response from FB: ", result);
             var token = result.credential.accessToken;
             var user = result.user;
+            var userId = user.providerData[0].uid;
 
             // Do Facebook API call to get user's data
-            fetch('https://graph.facebook.com/v2.6/' + user.id + '&access_token=' + token)
+            fetch('https://graph.facebook.com/v2.7/' + userId + '&access_token=' + token)
                 .then(function(response) {
                     if (response.status >= 200 && response.status < 300) {
                         return response.text();
                     } else {
-                        console.log("ERROR from FB API for user " + user.id);
+                        console.log("ERROR from FB API for user " + userId);
                         var error = new Error(response.statusText);
                         error.response = response;
                         throw error;
                     }
                 }).then(function(body) {
-                    console.log("Received response from FB GET call for user " + user.id, body);
-                    database.ref('users/' + user.id).set({
+                    console.log("Received response from FB GET call for user " + userId, body);
+                    database.ref('users/' + userId).set({
                         email: user.email
                     });
             });
 
-            thisComponent.setState({isSignedIn: true});
+            thisComponent.setState({isSignedIn: [true]});
         }).catch(function(error) {
             console.log("ERROR from FB signin", error);
             // Handle Errors here.
@@ -172,7 +174,7 @@ class TopNav extends React.Component {
 
     render() {
         var rightNav;
-        if (this.state.isSignedIn) {
+        if (this.state.isSignedIn[0]) {
             rightNav = <div></div>;
         } else {
             rightNav = <ul className="nav navbar-nav navbar-right">
@@ -205,6 +207,11 @@ class TopNav extends React.Component {
 
     handleLogout(event) {
         console.log("Logout clicked");
+        var thisComponent = this;
+        firebase.auth().signOut().then(function() {
+            thisComponent.state['isSignedIn'][0] = true;
+            // thisComponent.setState({isSignedIn: [false], currentCourses: []});
+        });
     }
 }
 
