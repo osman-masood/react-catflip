@@ -559,8 +559,9 @@
 	
 	        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(LandingPage).call(this, props));
 	
-	        _this.state = { isSignedIn: [false], currentCourses: [] };
+	        _this.state = { isSignedIn: false, currentCourses: [] };
 	        _this.handleFBSignIn = _this.handleFBSignIn.bind(_this);
+	        _this.setIsSignedIn = _this.setIsSignedIn.bind(_this);
 	        return _this;
 	    }
 	
@@ -571,19 +572,24 @@
 	            _firebase2.default.auth().onAuthStateChanged(function (user) {
 	                if (user) {
 	                    console.log("User is now logged in", user);
-	                    thisComponent.setState({ isSignedIn: [true] });
+	                    thisComponent.setIsSignedIn(true);
 	                } else {
 	                    // No user is signed in.
 	                }
 	            });
 	        }
 	    }, {
+	        key: 'setIsSignedIn',
+	        value: function setIsSignedIn(inputIsSignedIn) {
+	            this.setState({ isSignedIn: inputIsSignedIn });
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
 	            console.log("LandingPage render() with state: ", this.state);
 	            var body;
-	            if (this.state.isSignedIn[0]) {
-	                console.log("Going to show FormPage");
+	            if (this.state.isSignedIn) {
+	                console.log("LandingPage: Is signed in, going to show FormPage");
 	                body = _react2.default.createElement(_form2.default, null);
 	                // Location autocomplete
 	                // var input = document.getElementById('inputLocationGroup');
@@ -596,7 +602,7 @@
 	            return _react2.default.createElement(
 	                'div',
 	                null,
-	                _react2.default.createElement(TopNav, { isSignedIn: this.state.isSignedIn }),
+	                _react2.default.createElement(TopNav, { setIsSignedIn: this.setIsSignedIn, isSignedIn: this.state.isSignedIn }),
 	                _react2.default.createElement(
 	                    'div',
 	                    { className: 'container-fluid' },
@@ -717,8 +723,7 @@
 	                        email: user.email
 	                    });
 	                });
-	
-	                thisComponent.setState({ isSignedIn: [true] });
+	                thisComponent.setIsSignedIn(true);
 	            }).catch(function (error) {
 	                console.log("ERROR from FB signin", error);
 	                // Handle Errors here.
@@ -750,14 +755,23 @@
 	
 	        _this2.handleLogout = _this2.handleLogout.bind(_this2);
 	        _this2.state = { isSignedIn: props.isSignedIn };
+	        if (!props.setIsSignedIn) {
+	            console.error("Error - TopNav needs setIsSignedIn defined in its props");
+	        }
 	        return _this2;
 	    }
 	
 	    _createClass(TopNav, [{
+	        key: 'componentWillReceiveProps',
+	        value: function componentWillReceiveProps(nextProps) {
+	            this.setState({ isSignedIn: nextProps.isSignedIn });
+	        }
+	    }, {
 	        key: 'render',
 	        value: function render() {
+	            console.log("TopNav render() with state: ", this.state, ", props: ", this.props);
 	            var rightNav;
-	            if (this.state.isSignedIn[0]) {
+	            if (!this.state.isSignedIn) {
 	                rightNav = _react2.default.createElement('div', null);
 	            } else {
 	                rightNav = _react2.default.createElement(
@@ -847,8 +861,7 @@
 	            console.log("Logout clicked");
 	            var thisComponent = this;
 	            _firebase2.default.auth().signOut().then(function () {
-	                thisComponent.state['isSignedIn'][0] = true;
-	                // thisComponent.setState({isSignedIn: [false], currentCourses: []});
+	                thisComponent.props.setIsSignedIn(false);
 	            });
 	        }
 	    }]);

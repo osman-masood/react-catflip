@@ -27,8 +27,9 @@ var emailAuthProvider = firebase.auth.EmailAuthProvider();
 class LandingPage extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {isSignedIn: [false], currentCourses: []};
+        this.state = {isSignedIn: false, currentCourses: []};
         this.handleFBSignIn = this.handleFBSignIn.bind(this);
+        this.setIsSignedIn = this.setIsSignedIn.bind(this);
     }
 
     componentDidMount() {
@@ -36,18 +37,22 @@ class LandingPage extends React.Component {
         firebase.auth().onAuthStateChanged(function(user) {
             if (user) {
                 console.log("User is now logged in", user);
-                thisComponent.setState({isSignedIn: [true]});
+                thisComponent.setIsSignedIn(true);
             } else {
                 // No user is signed in.
             }
         });
     }
 
+    setIsSignedIn(inputIsSignedIn) {
+        this.setState({isSignedIn: inputIsSignedIn});
+    }
+
     render() {
         console.log("LandingPage render() with state: ", this.state);
         var body;
-        if (this.state.isSignedIn[0]) {
-            console.log("Going to show FormPage");
+        if (this.state.isSignedIn) {
+            console.log("LandingPage: Is signed in, going to show FormPage");
             body = <FormPage />;
             // Location autocomplete
             // var input = document.getElementById('inputLocationGroup');
@@ -58,7 +63,7 @@ class LandingPage extends React.Component {
         }
 
         return <div>
-            <TopNav isSignedIn={ this.state.isSignedIn } />
+            <TopNav setIsSignedIn={ this.setIsSignedIn } isSignedIn={ this.state.isSignedIn } />
 
             <div className="container-fluid">
                 <div style={ heroStyle }>
@@ -145,8 +150,7 @@ class LandingPage extends React.Component {
                         email: user.email
                     });
             });
-
-            thisComponent.setState({isSignedIn: [true]});
+            thisComponent.setIsSignedIn(true);
         }).catch(function(error) {
             console.log("ERROR from FB signin", error);
             // Handle Errors here.
@@ -170,11 +174,19 @@ class TopNav extends React.Component {
         super(props);
         this.handleLogout = this.handleLogout.bind(this);
         this.state = {isSignedIn: props.isSignedIn};
+        if (! props.setIsSignedIn) {
+            console.error("Error - TopNav needs setIsSignedIn defined in its props");
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState({isSignedIn: nextProps.isSignedIn});
     }
 
     render() {
+        console.log("TopNav render() with state: ", this.state, ", props: ", this.props);
         var rightNav;
-        if (this.state.isSignedIn[0]) {
+        if (! this.state.isSignedIn) {
             rightNav = <div></div>;
         } else {
             rightNav = <ul className="nav navbar-nav navbar-right">
@@ -209,8 +221,7 @@ class TopNav extends React.Component {
         console.log("Logout clicked");
         var thisComponent = this;
         firebase.auth().signOut().then(function() {
-            thisComponent.state['isSignedIn'][0] = true;
-            // thisComponent.setState({isSignedIn: [false], currentCourses: []});
+            thisComponent.props.setIsSignedIn(false);
         });
     }
 }
