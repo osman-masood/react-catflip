@@ -1,5 +1,9 @@
 import React from 'react';
 
+// Need to get the UI for this fixed (pressing Down button doesn't make it go down, doesn't remove suggestions on blur)
+// var GeoSuggest = require('react-geosuggest').default;
+
+
 class FormPage extends React.Component {
     
     constructor(props) {

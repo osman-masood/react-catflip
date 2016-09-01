@@ -7,5 +7,7 @@
     <orderEntry type="library" name="96c7f399f6" level="application" />
     <orderEntry type="library" name="react-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="reactstarter node_modules" level="project" />
+    <orderEntry type="library" name="bootstrap" level="application" />
+    <orderEntry type="library" name="jquery" level="application" />
   </component>
 </module>
